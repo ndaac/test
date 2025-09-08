@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Nama job
+  # Nama jobb
   debug:
     # Menggunakan runner Ubuntu terbaru yang disediakan GitHub
     runs-on: ubuntu-latest

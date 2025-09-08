@@ -1,31 +1,54 @@
-name: NodeJS with Webpack
+# Nama workflow yang akan tampil di tab Actions GitHub
+name: Debug with tmate
 
+# Pemicu workflow, misalnya saat ada push ke branch `main`
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - "main"
+  # Juga bisa dipicu secara manual dari tab Actions
+  workflow_dispatch:
 
 jobs:
-  build:
+  # Nama job
+  debug:
+    # Menggunakan runner Ubuntu terbaru yang disediakan GitHub
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-
     steps:
-    - uses: actions/checkout@v4
+      # Langkah 1: Checkout kode dari repositori Anda
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
+      # Langkah 2: Menginstal tmate dan memulai sesi debugging
+      - name: Setup tmate session
+        run: |
+          # Menggunakan 'sudo' untuk menjalankan apt-get update
+          # Ini untuk memperbarui daftar paket dari repositori
+          echo "Updating package list..."
+          sudo apt-get update
 
-    - name: Build
-      run: |
-        sudo su
-        apt update -y
-        apt upgrade -y 
-        apt install tmate
-        tmate
+          # Menggunakan 'sudo' untuk menginstal tmate dengan apt-get
+          # Flag '-y' untuk menjawab 'yes' secara otomatis pada prompt instalasi
+          echo "Installing tmate..."
+          sudo apt-get install -y tmate
+
+          # Menjalankan tmate di background
+          echo "Starting tmate session..."
+          tmate -S /tmp/tmate.sock new-session -d
+          tmate -S /tmp/tmate.sock wait tmate-ready
+
+          # Mencetak string koneksi SSH yang bisa Anda gunakan
+          # Anda akan menemukan output ini di log workflow
+          echo "##############################################################"
+          echo "To connect to the runner, copy and paste the following command into your terminal:"
+          tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'
+          echo "##############################################################"
+
+          # Trik untuk menjaga agar job tetap berjalan
+          # Workflow akan berhenti di sini sampai Anda membuat file '/tmp/continue'
+          # dari dalam sesi tmate, atau hingga job timeout (biasanya 6 jam).
+          # Untuk melanjutkan workflow, jalankan: touch /tmp/continue
+          while [ ! -f /tmp/continue ]; do
+            sleep 5
+          done

@@ -1,4 +1,4 @@
-# Nama workflow yang akan tampil di tab Actions GitHub
+# Nama workflow yang akan tampil di tab Actions GitHuby
 name: Debug with tmate
 
 # Pemicu workflow, misalnya saat ada push ke branch `main`
